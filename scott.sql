@@ -18,4 +18,11 @@
 
 -- 1. 조회(SELECT) - Read
 -- 사원정보조회(전체조회)
+-- *(모든 열)
 SELECT * FROM EMP e; 
+
+-- 특정 열 조회
+SELECT e.EMPNO, e.ENAME, e.JOB FROM EMP e;
+
+-- 사원번호, 부서번호만 조회
+SELECT e.EMPNO , e.DEPTNO FROM EMP e;
