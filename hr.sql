@@ -163,6 +163,91 @@ WHERE
 	e.COMMISSION_PCT IS NOT NULL;
 
 
+-- FIRST_NAME 이 'Curtis' 인 사람의 fist_name 과 last_name, email,phone_number, job_id 조회
+-- 단, job_id 결과는 소문자로 출력한다.
+SELECT
+	e.FIRST_NAME,
+	e.LAST_NAME,
+	e.EMAIL,
+	e.PHONE_NUMBER,
+	LOWER(e.JOB_ID)
+FROM
+	EMPLOYEES e
+WHERE
+	e.FIRST_NAME LIKE 'Curtis';
+
+
+-- 부서번호가 60,70,80,90 인 사원들의 사번,fist_name,last_name,hire_data,job_id 조회
+-- 단, job_id가 IT_PROG인 사원의 경우 '프로그래머' 로 변경하여 출력한다.
+SELECT
+	e.EMPLOYEE_ID,
+	e.FIRST_NAME,
+	e.LAST_NAME,
+	e.HIRE_DATE,
+	REPLACE(e.JOB_ID , 'IT_PROG', '프로그래머')
+FROM
+	EMPLOYEES e
+WHERE
+	e.DEPARTMENT_ID IN(60, 70, 80, 90);
+
+
+
+-- job_id가 AD_PRES, PU_CLERK인 사원들의 사번,fist_name,last_name,부서번호,job_id 조회
+-- 단 사원명은 first_name, last_name을 연결하여 출력한다 (예 Douglas Grant)
+SELECT
+	e.EMPLOYEE_ID,
+	e.FIRST_NAME || ' ' || e.LAST_NAME AS name,
+	e.DEPARTMENT_ID,
+	e.JOB_ID
+FROM
+	EMPLOYEES e
+WHERE
+	e.JOB_ID IN('AD_PRES', 'PU_CLERK');
+
+
+-- 입사 10주년이 되는 날짜 출력
+SELECT E.EMPLOYEE_ID, E.FIRST_NAME, E.HIRE_DATE, ADD_MONTHS(e.HIRE_DATE, 120)
+FROM EMPLOYEES e;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
