@@ -247,57 +247,308 @@ GROUP BY e.JOB_ID
 ORDER BY e.JOB_ID;
 
 
+-- 직업 ID가 SA_MAN인 사원들의 최대 연봉보다 높게 받는 사원들의
+-- last_name, job_id, salary 조회
+SELECT
+	e.LAST_NAME,
+	e.JOB_ID,
+	e.SALARY
+FROM
+	EMPLOYEES e
+WHERE
+	SALARY >(
+	SELECT
+		MAX(salary)
+	FROM
+		EMPLOYEES e
+	WHERE
+		JOB_ID = 'SA_MAN');
+
+
+-- 커미션을 받는 사원들의 부서와 연봉이 동일한 사원들으 last_name,
+-- deptno, salary 조회
+SELECT
+	e.LAST_NAME,
+	e.DEPARTMENT_ID,
+	e.SALARY
+FROM
+	EMPLOYEES e
+WHERE
+	(e.DEPARTMENT_ID ,
+	e.SALARY) IN (
+	SELECT
+		DEPARTMENT_ID,
+		salary
+	FROM
+		EMPLOYEES e
+	WHERE
+		COMMISSION_PCT IS NOT NULL);
+
+
+-- 회사 전체 평균 연봉보다 더 버는 사원들 중 last_name에 u가 있는
+-- 사원들이 근무하는 부서와 같은 부서에 근무하는 사원들의
+-- 사번, last_name, salary 조회
+SELECT
+	e.EMPLOYEE_ID,
+	e.LAST_NAME,
+	e.SALARY
+FROM
+	EMPLOYEES e
+WHERE
+	e.DEPARTMENT_ID IN (
+	SELECT
+		DISTINCT e.DEPARTMENT_ID
+	FROM
+		EMPLOYEES e
+	WHERE
+		e.SALARY > (SELECT round(AVG(SALARY)) FROM EMPLOYEES)
+		AND e.LAST_NAME LIKE '%u%');
+
+-- join
+SELECT
+	e.EMPLOYEE_ID,
+	e.LAST_NAME,
+	e.SALARY
+FROM
+	EMPLOYEES e
+JOIN (
+	SELECT
+		DISTINCT e.DEPARTMENT_ID
+	FROM
+		EMPLOYEES e
+	WHERE
+		e.SALARY > (
+		SELECT
+			round(AVG(e. SALARY))
+		FROM
+			EMPLOYEES e)
+		AND e.LAST_NAME LIKE '%u%') d
+ON
+	e.DEPARTMENT_ID = d.DEPARTMENT_ID;
 
 
 
 
+-- 각 부서별 평균 연봉보다 더 받는 동일부서 사원들의 last_name, salary
+-- deptno, 해당 부서의 평균연봉 조회 (부서별 평균 연봉을 기준으로 오름차순)
+SELECT
+	e.LAST_NAME,
+	e.SALARY, e.DEPARTMENT_ID, d.AVG_SALARY
+FROM
+	EMPLOYEES e
+JOIN (
+	SELECT
+		DEPARTMENT_ID,
+		round(AVG(SALARY)) AS avg_salary
+	FROM
+		EMPLOYEES
+	GROUP BY
+		DEPARTMENT_ID) d ON
+	e.DEPARTMENT_ID = d.DEPARTMENT_ID
+WHERE
+	e.SALARY > d.AVG_SALARY
+ORDER BY
+	d.AVG_SALARY ASC;
+
+
+SELECT
+	e.LAST_NAME,
+	e.SALARY,
+	e.DEPARTMENT_ID,
+	p.DEPT_SAL_AVG
+FROM
+	EMPLOYEES e ,
+	(
+	SELECT
+		e.DEPARTMENT_ID,
+		round(AVG(e.SALARY)) AS dept_sal_avg
+	FROM
+		EMPLOYEES e
+	WHERE
+		e.DEPARTMENT_ID IS NOT NULL
+	GROUP BY
+		e.DEPARTMENT_ID) p
+WHERE
+	e.DEPARTMENT_ID = p.DEPARTMENT_ID
+	AND DEPT_SAL_AVG < e.SALARY
+ORDER BY
+	e.DEPARTMENT_ID;
 
 
 
+-- last_name 이 'Davies' 인 사람보다 나중에 고용된 사원들의 last_name, hire_date 조회
+SELECT
+	e.LAST_NAME,
+	e.HIRE_DATE
+FROM
+	EMPLOYEES e
+WHERE
+	e.hire_date > (
+	SELECT
+		HIRE_DATE
+	FROM
+		employees
+	WHERE
+		LAST_NAME = 'Davies');
+
+-- last_name 이 'King' 인 사원을 매니저로 두고 있는 모든 사원들의 last_name, salaty 조회
+SELECT
+	e.LAST_NAME,
+	e.SALARY
+FROM
+	EMPLOYEES e
+WHERE
+	e.MANAGER_ID IN (
+	SELECT
+		EMPLOYEE_ID
+	FROM
+		EMPLOYEES
+	WHERE
+		LAST_NAME = 'King');
 
 
+-- last_name 이 'Hall' 인 사원과 동일한 연봉 및 커미션을 받는 사원들의 last_name, 부서번호, 연봉 조회
+-- 단 'Hall' 은 제외
+SELECT
+	e.LAST_NAME,
+	e.DEPARTMENT_ID,
+	e.SALARY
+FROM
+	EMPLOYEES e
+WHERE
+	(SALARY,
+	NVL(commission_pct, 0)) = (
+	SELECT
+		salary,
+		NVL(commission_pct, 0)
+	FROM
+		employees
+	WHERE
+		LAST_NAME = 'Hall')
+	AND LAST_NAME != 'Hall';
+
+SELECT
+	e. last_name,
+	e.department_id,
+	e.salary
+FROM
+	EMPLOYEES e
+WHERE
+	(e.salary,
+	NVL(e.COMMISSION_PCT, 0))
+IN (
+	SELECT
+		e.SALARY,
+		NVL(e.COMMISSION_PCT, 0)
+	FROM
+		EMPLOYEES e
+	WHERE
+		e.LAST_NAME = 'Hall')
+	AND e.last_name != 'Hall';
+
+-- last_name이 'Zlotkey'인 사원과 동일한 부서에서 근무하는 모든 사원들의 사번, 고용날짜 조회
+-- 단 'Zlotkey' 제외
+SELECT
+	e.EMPLOYEE_ID,
+	e.HIRE_DATE
+FROM
+	EMPLOYEES e
+WHERE
+	DEPARTMENT_ID = (
+	SELECT
+		DEPARTMENT_ID
+	FROM
+		EMPLOYEES
+	WHERE
+		LAST_NAME = 'Zlotkey')
+	AND LAST_NAME != 'Zlotkey';
 
 
+SELECT
+	e.EMPLOYEE_ID,
+	e.HIRE_DATE
+FROM
+	EMPLOYEES e
+WHERE
+	DEPARTMENT_ID IN (
+	SELECT
+		DEPARTMENT_ID
+	FROM
+		EMPLOYEES
+	WHERE
+		LAST_NAME = 'Zlotkey')
+	AND LAST_NAME != 'Zlotkey';
 
 
+-- 부서가 위치한 지역의 국가 ID 및 국가명을 조회한다
+-- Location, department, countries 테이블 사용
+SELECT
+	*
+FROM
+	DEPARTMENTS d
+JOIN LOCATIONS l ON
+	d.LOCATION_ID = l.LOCATION_ID
+JOIN COUNTRIES c ON l.COUNTRY_ID = c.COUNTRY_ID;
 
+SELECT
+	c.COUNTRY_ID,
+	c.COUNTRY_NAME
+FROM
+	COUNTRIES c
+WHERE
+	c.COUNTRY_ID IN (
+	SELECT
+		DISTINCT l.COUNTRY_ID
+	FROM
+		DEPARTMENTS d
+	JOIN LOCATIONS l ON
+		d.LOCATION_ID = l.LOCATION_ID
+	);
 
+-- 위치 ID가 1700인 사원들의 연봉과 커미션을 추출한 뒤, 추출된 사원들의 연봉과 커미션이 동일한 사원정보 출력
+-- 출력 : 사번, 이름(first_name + last_name), 부서번호, 급여
+SELECT
+	e.EMPLOYEE_ID,
+	e.FIRST_NAME || ' ' || e.LAST_NAME AS full_name,
+	e.DEPARTMENT_ID,
+	e.SALARY
+FROM
+	EMPLOYEES e
+WHERE
+	(e.SALARY ,
+	NVL(commission_pct, 0)) IN (
+	SELECT
+		SALARY,
+		NVL(commission_pct, 0)
+	FROM
+		EMPLOYEES e
+	WHERE
+		e.DEPARTMENT_ID IN (
+		SELECT
+			d.DEPARTMENT_ID
+		FROM
+			DEPARTMENTS d
+		WHERE
+			LOCATION_ID = 1700));
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+SELECT
+	e.EMPLOYEE_ID,
+	e.FIRST_NAME || ' ' || e.LAST_NAME,
+	e.DEPARTMENT_ID,
+	e.SALARY
+FROM
+	EMPLOYEES e
+WHERE
+	(e.SALARY,
+	nvl(e.COMMISSION_PCT, 0))
+IN (
+	SELECT
+		DISTINCT e.SALARY,
+		nvl(e.COMMISSION_PCT, 0)
+	FROM
+		EMPLOYEES e
+	JOIN DEPARTMENTS d ON
+		e.DEPARTMENT_ID = d.DEPARTMENT_ID
+	WHERE
+		d.LOCATION_ID = 1700);
 
